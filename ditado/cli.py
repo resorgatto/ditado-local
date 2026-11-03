@@ -11,6 +11,7 @@ DURACAO_MINIMA = 0.3  # segundos; toques acidentais no atalho são ignorados
 
 def ouvir(args: argparse.Namespace) -> None:
     import keyboard
+    import sounddevice as sd
     import winsound
 
     from .audio import TAXA, Gravador
@@ -24,7 +25,14 @@ def ouvir(args: argparse.Namespace) -> None:
 
     while True:
         keyboard.wait(args.atalho)
-        gravador.iniciar()
+        try:
+            gravador.iniciar()
+        except sd.PortAudioError as erro:
+            sys.exit(
+                f"Não foi possível abrir o microfone: {erro}\n"
+                "Verifique em Configurações > Privacidade e segurança > Microfone se o acesso está "
+                "ligado para o Python (o Python da Microsoft Store aparece na lista de apps)."
+            )
         winsound.Beep(880, 60)
         while keyboard.is_pressed(args.atalho):
             time.sleep(0.02)
