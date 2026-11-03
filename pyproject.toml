@@ -1,0 +1,25 @@
+[project]
+name = "ditado-local"
+version = "0.1.0"
+description = "Ditado por voz offline para Windows: segure uma tecla, fale e o texto aparece onde está o cursor."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Renato Sorgatto" }]
+requires-python = ">=3.10"
+dependencies = [
+  "faster-whisper>=1.1",
+  "sounddevice>=0.5",
+  "numpy>=1.26",
+  "keyboard>=0.13",
+  "pyperclip>=1.9",
+]
+
+[project.scripts]
+ditado = "ditado.cli:main"
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["ditado"]
