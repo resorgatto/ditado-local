@@ -104,6 +104,10 @@ solta o atalho  ──► Whisper transcreve, com o vocabulário como contexto
 | [`ditado/colar.py`](ditado/colar.py) | Cola o texto e restaura a área de transferência. |
 | [`ditado/cli.py`](ditado/cli.py) | Comandos de linha e o laço do ditado. |
 
+## Problemas comuns
+
+**`Error opening InputStream ... [MME error 1]` ao segurar o atalho.** O Windows está bloqueando o microfone para o Python. Abra *Configurações › Privacidade e segurança › Microfone* e ligue o acesso. Se o seu Python veio da Microsoft Store, ele aparece na lista de apps como **Python** e precisa ser ligado individualmente.
+
 ## Limites
 
 - **Só Windows:** usa `winsound` para os bipes e o atalho global da biblioteca `keyboard`.
