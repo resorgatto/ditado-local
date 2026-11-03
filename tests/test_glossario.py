@@ -56,6 +56,34 @@ class GlossarioTest(unittest.TestCase):
         )
         self.assertEqual(self.glossario.vocabulario(limite=2, agora=agora), ["Favorito", "Recente"])
 
+    def test_aplicar_troca_termos_inteiros_sem_diferenciar_maiusculas(self):
+        self.glossario.adicionar("brave end", "Bravend")
+        self.glossario.adicionar("brave", "BRAVE")
+        texto = self.glossario.aplicar("Falei com a brave end e com a Brave, mas não com bravely.")
+        self.assertEqual(texto, "Falei com a Bravend e com a BRAVE, mas não com bravely.")
+
+    def test_aplicar_respeita_acentos_como_parte_da_palavra(self):
+        self.glossario.adicionar("ação", "Ação Social")
+        self.assertEqual(self.glossario.aplicar("ações e ação."), "ações e Ação Social.")
+
+    def test_ditado_que_e_so_um_atalho_vira_o_texto_completo(self):
+        self.glossario.adicionar("meu email", "renato@exemplo.com")
+        self.assertEqual(self.glossario.aplicar("  Meu email.  "), "renato@exemplo.com")
+        self.assertEqual(self.glossario.aplicar("Meu e-mail."), "renato@exemplo.com")
+        self.assertEqual(self.glossario.aplicar("Meu e-mail antigo."), "Meu e-mail antigo.")
+
+    def test_aplicar_marca_uso_dos_termos_encontrados(self):
+        agora = datetime(2026, 11, 3, 12, 0)
+        self.glossario.adicionar("Learning360")
+        self.glossario.adicionar("ClickUp")
+        self.glossario.adicionar("teams", "Teams")
+        self.glossario.aplicar("Abri o learning360 e o teams.", agora=agora)
+
+        self.assertEqual(self.glossario.buscar("Learning360").usos, 1)
+        self.assertEqual(self.glossario.buscar("Learning360").ultimo_uso, "2026-11-03T12:00:00")
+        self.assertEqual(self.glossario.buscar("teams").usos, 1)
+        self.assertEqual(self.glossario.buscar("ClickUp").usos, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

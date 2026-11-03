@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -76,3 +77,44 @@ class Glossario:
         termos = [e for e in self.entradas if not e.substituto]
         termos.sort(key=lambda e: (not e.favorito, recencia(e), -e.usos, e.termo.casefold()))
         return [e.termo for e in termos[:limite]]
+
+    def aplicar(self, texto: str, agora: datetime | None = None) -> str:
+        """Troca os termos que têm substituto e marca o uso dos termos encontrados.
+
+        Se o ditado inteiro for só um termo com substituto (ignorando pontuação),
+        devolve apenas o substituto. É assim que funcionam os atalhos de texto:
+        dite "meu email" e o endereço completo é colado.
+        """
+        quando = (agora or datetime.now()).isoformat(timespec="seconds")
+        substituicoes = {e.termo.casefold(): e for e in self.entradas if e.substituto}
+
+        inteiro = substituicoes.get(_sem_pontuacao(texto).casefold())
+        if inteiro:
+            _marcar_uso(inteiro, quando)
+            return inteiro.substituto
+
+        if substituicoes:
+            termos = sorted(substituicoes, key=len, reverse=True)
+            padrao = re.compile(r"(?<!\w)(?:" + "|".join(map(re.escape, termos)) + r")(?!\w)", re.IGNORECASE)
+
+            def trocar(achado: re.Match) -> str:
+                entrada = substituicoes[achado.group(0).casefold()]
+                _marcar_uso(entrada, quando)
+                return entrada.substituto
+
+            texto = padrao.sub(trocar, texto)
+
+        minusculo = texto.casefold()
+        for entrada in self.entradas:
+            if not entrada.substituto and re.search(r"(?<!\w)" + re.escape(entrada.termo.casefold()) + r"(?!\w)", minusculo):
+                _marcar_uso(entrada, quando)
+        return texto
+
+
+def _sem_pontuacao(texto: str) -> str:
+    return re.sub(r"[^\w\s]", "", texto).strip()
+
+
+def _marcar_uso(entrada: Entrada, quando: str) -> None:
+    entrada.usos += 1
+    entrada.ultimo_uso = quando
